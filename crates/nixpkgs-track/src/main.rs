@@ -174,7 +174,7 @@ async fn main() -> miette::Result<()> {
 						.unwrap();
 
 					if let Some(selection) = selection
-						&& selection.len() > 0
+						&& !selection.is_empty()
 					{
 						let selected_pull_requests: Vec<u64> = selection
 							.iter()
@@ -284,9 +284,9 @@ impl TrackedPullRequest {
 	}
 }
 
-impl ToString for TrackedPullRequest {
-	fn to_string(&self) -> String {
-		format!("[{}] {}", &self.id, &self.title.link(&self.url))
+impl std::fmt::Display for TrackedPullRequest {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "[{}] {}", self.id, self.title.link(&self.url))
 	}
 }
 
