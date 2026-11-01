@@ -12,7 +12,11 @@ use yansi::hyperlink::HyperlinkExt;
 
 use clap::Parser;
 
-use nixpkgs_track::{
+mod auth;
+mod cli;
+mod utils;
+
+use crate::{
 	auth::get_github_token,
 	cli::{Cli, Commands},
 	utils::format_seconds_to_time_ago,
