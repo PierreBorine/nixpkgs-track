@@ -1,5 +1,33 @@
 use clap::{Parser, Subcommand};
+use clap_complete::engine::{ArgValueCompleter, CompletionCandidate};
 use url::Url;
+
+use crate::utils::{Cache, cache_dir, read_cache};
+
+fn ids_completer(current: &std::ffi::OsStr) -> Vec<CompletionCandidate> {
+	let mut completions = vec![];
+	let Some(current) = current.to_str() else {
+		return completions;
+	};
+
+	let cache = cache_dir()?;
+	let ids: Vec<String> = if cache.exists() {
+		read_cache(&cache)?
+			.pull_requests
+			.iter()
+			.map(ToString::to_string)
+			.collect()
+	} else {
+		return completions;
+	};
+
+	for id in ids {
+		if id.starts_with(current) {
+			completions.push(CompletionCandidate::new(id));
+		}
+	}
+	completions
+}
 
 #[derive(Parser)]
 #[command(version, about, subcommand_negates_reqs = true)]
@@ -25,7 +53,7 @@ pub enum Commands {
 	},
 	/// Remove pull request(s) from track list
 	Remove {
-		#[clap(required_unless_present("all"), value_parser = parse_pull_request_id)]
+		#[clap(required_unless_present("all"), value_parser = parse_pull_request_id, add = ArgValueCompleter::new(ids_completer))]
 		pull_requests: Vec<u64>,
 
 		#[clap(long, conflicts_with = "pull_requests")]

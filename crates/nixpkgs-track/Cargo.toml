@@ -14,6 +14,7 @@ build = "build.rs"
 [dependencies]
 chrono = "0.4.39"
 clap = { version = "4.5.26", features = ["derive", "env"] }
+clap_complete = { version = "4.5.26", features = ["unstable-dynamic"] }
 serde = "1.0.217"
 yansi = { version = "1.0.1", features = ["hyperlink"] }
 nixpkgs-track_lib = { path = "../nixpkgs-track_lib", features = [
@@ -32,7 +33,9 @@ url = "2.5.8"
 
 [build-dependencies]
 clap = { version = "4.5.26", features = ["derive", "env"] }
-clap_complete = "4.5.26"
+clap_complete = { version = "4.5.26", features = ["unstable-dynamic"] }
+serde = "1.0.217"
+miette = { version = "7.4.0", features = ["fancy"] }
 url = "2.5.8"
 
 [lints]

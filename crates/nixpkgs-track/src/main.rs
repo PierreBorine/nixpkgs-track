@@ -17,9 +17,7 @@ mod cli;
 mod utils;
 
 use crate::{
-	auth::get_github_token,
-	cli::{Cli, Commands},
-	utils::format_seconds_to_time_ago,
+	auth::get_github_token, cli::{Cli, Commands}, utils::{Cache, CacheFsError, cache_dir, format_seconds_to_time_ago, read_cache},
 };
 use nixpkgs_track_lib::{NixpkgsTrackError, branch_contains_commit, fetch_nixpkgs_pull_request};
 
@@ -136,19 +134,10 @@ async fn main() -> miette::Result<()> {
 
 	let args = Cli::parse();
 
-	let cache_dir = user_dirs::cache_dir()
-		.into_diagnostic()?
-		.join("nixpkgs-track");
-	if !cache_dir.exists() {
-		fs::create_dir_all(&cache_dir).map_err(CacheFsError)?;
-	}
-
-	let cache = cache_dir.join("cache.json");
+	let cache = cache_dir()?;
 
 	let mut cache_data: Cache = if cache.exists() {
-		serde_json::from_str(&fs::read_to_string(&cache).map_err(CacheFsError)?)
-			.into_diagnostic()
-			.context("Failed to parse cache file")?
+		read_cache(&cache)?
 	} else {
 		Cache::new()
 	};
@@ -255,17 +244,6 @@ async fn main() -> miette::Result<()> {
 }
 
 #[derive(Serialize, Deserialize)]
-struct Cache {
-	pull_requests: Vec<u64>,
-}
-
-impl Cache {
-	fn new() -> Self {
-		Cache { pull_requests: vec![] }
-	}
-}
-
-#[derive(Serialize, Deserialize)]
 struct TrackedPullRequest {
 	id: u64,
 	title: String,
@@ -315,10 +293,6 @@ async fn fetch_pull_requests(pull_requests: &[u64], token: Option<String>) -> mi
 
 	Ok(Some(pull_requests?))
 }
-
-#[derive(thiserror::Error, Debug, miette::Diagnostic)]
-#[error("An error occurred while reading or writing the cache file.")]
-pub struct CacheFsError(#[from] std::io::Error);
 
 #[derive(thiserror::Error, Debug, miette::Diagnostic)]
 pub enum CheckError {
